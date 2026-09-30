@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
@@ -57,6 +59,20 @@ public class PolicyController {
       .stream()
       .map(this::toDTO)
       .collect(Collectors.toList());
+    return ResponseEntity.ok(policies);
+  }
+
+  @GetMapping("/expiring-soon")
+  public ResponseEntity<List<PolicyDTO>> getPoliciesExpiringSoon() {
+    LocalDate today = LocalDate.now(ZoneOffset.UTC);
+    String startDate = today.format(DateTimeFormatter.ISO_LOCAL_DATE);
+    String endDate = today.plusDays(30).format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+    List<PolicyDTO> policies = policyRepository.findByEndDateBetweenOrderByEndDateAsc(startDate, endDate)
+      .stream()
+      .map(this::toDTO)
+      .collect(Collectors.toList());
+
     return ResponseEntity.ok(policies);
   }
 

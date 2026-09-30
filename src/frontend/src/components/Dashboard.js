@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import '../styles/Dashboard.css';
 
-function Dashboard({ policies, claims, onRefresh, apiBase }) {
-  const [selectedPolicyId, setSelectedPolicyId] = useState(policies[0]?.id || null);
+function Dashboard({ policies, claims, expiringPolicies, onRefresh, apiBase }) {
+  const [selectedPolicyId, setSelectedPolicyId] = useState(null);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
   const [modalMode, setModalMode] = useState('add');
+  const [isRenewalBannerDismissed, setIsRenewalBannerDismissed] = useState(false);
   const [formData, setFormData] = useState({
     holderName: '',
     planName: '',
@@ -15,6 +16,22 @@ function Dashboard({ policies, claims, onRefresh, apiBase }) {
     endDate: '',
   });
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (policies.length === 0) {
+      setSelectedPolicyId(null);
+      return;
+    }
+
+    const selectedStillExists = policies.some((policy) => policy.id === selectedPolicyId);
+    if (!selectedStillExists) {
+      setSelectedPolicyId(policies[0].id);
+    }
+  }, [policies, selectedPolicyId]);
+
+  useEffect(() => {
+    setIsRenewalBannerDismissed(false);
+  }, [expiringPolicies]);
 
   const selectedPolicy = policies.find(p => p.id === selectedPolicyId);
   const policyClaims = claims.filter(c => c.policyId === selectedPolicyId);
@@ -102,6 +119,34 @@ function Dashboard({ policies, claims, onRefresh, apiBase }) {
         </button>
       </div>
 
+      {!isRenewalBannerDismissed && expiringPolicies.length > 0 && (
+        <div className="renewal-banner" data-testid="renewal-reminder-banner">
+          <div className="renewal-banner-header">
+            <strong>Renewal reminder:</strong>&nbsp;The following policies expire within 30 days.
+          </div>
+          <div className="renewal-links">
+            {expiringPolicies.map((policy) => (
+              <a
+                key={policy.id}
+                className="renewal-link-btn"
+                href={`#policy-tab-${policy.id}`}
+                onClick={() => setSelectedPolicyId(policy.id)}
+                data-testid={`renewal-policy-link-${policy.id}`}
+              >
+                {policy.holderName} ({policy.id}) — ends {policy.endDate}
+              </a>
+            ))}
+          </div>
+          <button
+            className="renewal-dismiss-btn"
+            onClick={() => setIsRenewalBannerDismissed(true)}
+            data-testid="dismiss-renewal-banner-btn"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {selectedPolicy && (
         <>
           <div className="policy-tabs" data-testid="policy-tabs">
@@ -109,6 +154,7 @@ function Dashboard({ policies, claims, onRefresh, apiBase }) {
               <div
                 key={policy.id}
                 className={`policy-tab ${selectedPolicyId === policy.id ? 'active' : ''}`}
+                id={`policy-tab-${policy.id}`}
                 onClick={() => setSelectedPolicyId(policy.id)}
                 data-testid={`policy-tab-${policy.id}`}
               >

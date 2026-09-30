@@ -7,6 +7,7 @@ A lightweight health insurance management system built with a **React** frontend
 ## Features (Phase 1 MVP)
 
 - **Policy Dashboard** — view policy details (ID, plan name, coverage amount, status, dates) with per-policy stats and recent claims
+- **Renewal reminders** — dashboard banner shows policies expiring within 30 days and lets you jump directly to each policy
 - **Multi-policy support** — clickable tabs to switch between policies without a page reload
 - **Claims Module** — submit claims (amount, description, optional file upload), filter by policy, and track status (Pending / Approved / Rejected)
 - **REST API** — JSON endpoints for policy and claim operations
@@ -68,6 +69,11 @@ chmod +x run.sh
 Open **http://localhost:3000** in your browser.
 
 The backend API runs on **http://localhost:8080/api** and is seeded with sample policies and claims on startup. The script installs frontend dependencies automatically if `node_modules` is missing.
+
+### Renewal reminder usage
+
+- Backend endpoint: `GET /api/policies/expiring-soon` returns policies with `endDate` in the next 30 days (inclusive).
+- On the dashboard, when matching policies exist, a dismissible renewal reminder banner appears with quick-select buttons for each policy.
 
 ---
 
