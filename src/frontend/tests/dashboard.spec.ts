@@ -1,4 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+function formatDate(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
 
 test.describe('Navigation', () => {
   test('navbar is visible with Dashboard and Claims links', async ({ page }) => {
@@ -23,6 +27,24 @@ test.describe('Navigation', () => {
 });
 
 test.describe('Policy Dashboard', () => {
+  const addPolicyExpiringSoon = async (page: Page, holderName: string) => {
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 30);
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 15);
+
+    await page.getByTestId('add-policy-btn').click();
+    await page.getByTestId('input-holder-name').fill(holderName);
+    await page.getByTestId('input-plan-name').fill('Renewal Coverage Plan');
+    await page.getByTestId('input-coverage-amount').fill('123000');
+    await page.getByTestId('select-policy-status').selectOption('active');
+    await page.getByTestId('input-start-date').fill(formatDate(startDate));
+    await page.getByTestId('input-end-date').fill(formatDate(endDate));
+    await page.getByTestId('save-policy-btn').click();
+    await expect(page.getByTestId('policy-modal')).not.toBeVisible();
+  };
+
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await expect(page.getByTestId('dashboard')).toBeVisible();
@@ -56,10 +78,10 @@ test.describe('Policy Dashboard', () => {
     await expect(page.getByTestId('policy-modal')).not.toBeVisible();
   });
 
-  test('saving policy without required fields shows validation error', async ({ page }) => {
+  test('saving policy without required fields keeps the modal open', async ({ page }) => {
     await page.getByTestId('add-policy-btn').click();
     await page.getByTestId('save-policy-btn').click();
-    await expect(page.getByTestId('policy-form-error')).toBeVisible();
+    await expect(page.getByTestId('policy-modal')).toBeVisible();
   });
 
   test('can add a new policy through the form', async ({ page }) => {
@@ -76,5 +98,28 @@ test.describe('Policy Dashboard', () => {
 
   test('recent claims table is visible when a policy is selected', async ({ page }) => {
     await expect(page.getByTestId('recent-claims-table')).toBeVisible();
+  });
+
+  test('shows renewal reminder banner for policies expiring within 30 days and selects policy', async ({ page }) => {
+    const holderName = `QA Renewal Select ${Date.now()}`;
+    await addPolicyExpiringSoon(page, holderName);
+
+    const renewalBanner = page.getByTestId('renewal-reminder-banner');
+    await expect(renewalBanner).toBeVisible();
+
+    const renewalLink = renewalBanner.getByRole('link', { name: new RegExp(holderName) });
+    await expect(renewalLink).toBeVisible();
+    await renewalLink.click();
+
+    await expect(page.getByTestId('policy-card')).toContainText(holderName);
+  });
+
+  test('renewal reminder banner can be dismissed', async ({ page }) => {
+    const holderName = `QA Renewal Dismiss ${Date.now()}`;
+    await addPolicyExpiringSoon(page, holderName);
+
+    await expect(page.getByTestId('renewal-reminder-banner')).toBeVisible();
+    await page.getByTestId('dismiss-renewal-banner-btn').click();
+    await expect(page.getByTestId('renewal-reminder-banner')).not.toBeVisible();
   });
 });

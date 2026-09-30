@@ -20,6 +20,52 @@
   color: #666;
 }
 
+.renewal-banner {
+  border: 1px solid #ffe08a;
+  background: #fff8e1;
+  color: #5f4500;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.renewal-banner-header {
+  margin-bottom: 0.75rem;
+}
+
+.renewal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.renewal-link-btn {
+  display: inline-block;
+  border: 1px solid #e0b84b;
+  background: white;
+  color: #5f4500;
+  border-radius: 16px;
+  padding: 0.35rem 0.75rem;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.renewal-link-btn:hover {
+  background: #fff3c2;
+}
+
+.renewal-dismiss-btn {
+  border: none;
+  background: transparent;
+  color: #5f4500;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
 .policy-tabs {
   display: flex;
   gap: 1rem;
